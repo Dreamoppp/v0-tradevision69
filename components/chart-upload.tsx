@@ -10,6 +10,7 @@ import { UploadedCsvChart, type OhlcRow } from "@/components/uploaded-csv-chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { InternationalChartLab } from "@/components/international-chart-lab"
 
 const POPULAR_STOCKS = [
   { symbol: "INFY", name: "Infosys Ltd" },
@@ -478,6 +479,8 @@ export function ChartUpload() {
           </CardContent>
         </Card>
       )}
+
+      <InternationalChartLab />
     </div>
   )
 }
