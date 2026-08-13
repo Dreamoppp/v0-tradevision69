@@ -385,7 +385,7 @@ export function ChartUpload() {
     <div className="w-full space-y-6 px-4 py-8">
       <div>
         <h1 className="text-3xl font-bold mb-2">AI-Powered Stock Analysis</h1>
-        <p className="text-muted-foreground">Select an Indian stock to get live market analysis and trading signals</p>
+        <p className="text-muted-foreground">Select an Indian stock to request analysis from verified live market data</p>
       </div>
 
       <Card className="mb-8">

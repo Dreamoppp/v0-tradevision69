@@ -28,73 +28,15 @@ const INDIAN_STOCKS = [
   { symbol: "ITC", name: "ITC Ltd" },
 ]
 
-function generateFallbackData(symbol: string) {
-  const stockPrices: { [key: string]: number } = {
-    INFY: 1750,
-    TCS: 4250,
-    WIPRO: 420,
-    HCLTECH: 1800,
-    BAJAJFINSV: 1600,
-    RELIANCE: 2400,
-    HDFC: 2800,
-    ICICIBANK: 1100,
-    MARUTI: 9300,
-    LT: 2400,
-    SBIN: 500,
-    ITC: 440,
-  }
-
-  const basePrice = stockPrices[symbol] || Math.random() * 5000 + 500
-  const variance = Math.random() * 0.04 - 0.02
-  const adjustedPrice = basePrice * (1 + variance)
-
-  return {
-    ltp: adjustedPrice,
-    high: adjustedPrice * 1.03,
-    low: adjustedPrice * 0.97,
-    open: adjustedPrice * 0.99,
-    close: adjustedPrice,
-  }
-}
-
 async function analyzeIndianStock(symbol: string, mode: string, timeframe: string, risk: string) {
-  const stock = INDIAN_STOCKS.find((s) => s.symbol === symbol) || { symbol, name: symbol }
-  const data = generateFallbackData(symbol)
+  const stock = INDIAN_STOCKS.find((s) => s.symbol === symbol)
+  if (!stock) {
+    throw new Error(`Live market data is not configured for ${symbol}. No prediction was generated.`)
+  }
 
-  const change = ((data.close - data.open) / data.open) * 100
-  const trend: "Bullish" | "Bearish" | "Sideways" = change > 1 ? "Bullish" : change < -1 ? "Bearish" : "Sideways"
+  // Never manufacture a price or indicator. A live broker/data-provider adapter must supply OHLCV here.
+  throw new Error(`Live market data is unavailable for ${stock.name}. No prediction was generated.`)
 
-  const support = data.low * 0.98
-  const resistance = data.high * 1.02
-
-  const recommendation = `
-Indian Stock Analysis: ${stock.name} (${symbol})
-Current LTP: ₹${data.ltp.toFixed(2)}
-Today's Change: ${change.toFixed(2)}%
-
-Trend: ${trend}
-Support Level: ₹${support.toFixed(2)}
-Resistance Level: ₹${resistance.toFixed(2)}
-
-Trading Mode: ${mode === "intraday" ? "Intraday" : "Swing"}
-Timeframe: ${timeframe}
-Risk Profile: ${risk}
-
-For ${risk} risk tolerance and ${timeframe} timeframe:
-- Entry Point: Near ₹${(data.ltp * 0.99).toFixed(2)}
-- Stop Loss: ₹${(data.ltp * (risk === "low" ? 0.98 : risk === "medium" ? 0.96 : 0.94)).toFixed(2)}
-- Target: ₹${(data.ltp * (risk === "low" ? 1.02 : risk === "medium" ? 1.04 : 1.06)).toFixed(2)}
-  `.trim()
-
-  return {
-    trend,
-    currentPrice: data.ltp,
-    keyLevels: { support, resistance },
-    technicalIndicators: ["Volume", "Price Action", "Support/Resistance"],
-    tradingRecommendation: recommendation,
-    stockName: stock.name,
-    symbol,
-  } satisfies AnalysisCore
 }
 
 function generateTradingSignals(analysis: AnalysisCore, mode: string, risk: string) {
@@ -150,12 +92,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("[v0] === Analysis error ===", error)
+    const message = error instanceof Error ? error.message : "Live market data is unavailable. No prediction was generated."
     return NextResponse.json(
       {
-        error: "Analysis failed",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: message,
+        details: "This endpoint no longer fabricates prices, indicators, support, resistance, entries, stops, or targets.",
       },
-      { status: 500 },
+      { status: 503 },
     )
   }
 }
