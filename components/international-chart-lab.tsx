@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useCallback, useMemo, useState } from "react"
-import { Activity, AlertTriangle, BarChart3, CheckCircle2, Clock3, FileUp, Globe2, UploadCloud } from "lucide-react"
+import { Activity, AlertTriangle, BarChart3, CheckCircle2, Clock3, FileImage, FileUp, Globe2, UploadCloud } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,6 +47,9 @@ export function InternationalChartLab() {
   const [symbol, setSymbol] = useState("AAPL")
   const [interval, setInterval] = useState("15")
   const [fileName, setFileName] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageAnalysis, setImageAnalysis] = useState<string | null>(null)
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
   const [rows, setRows] = useState<OhlcRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -55,17 +58,52 @@ export function InternationalChartLab() {
   const tradingViewSymbol = `${exchangeInfo.prefix}:${symbol.trim().toUpperCase() || exchangeInfo.example}`
   const tradingViewUrl = useMemo(() => `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tradingViewSymbol)}&interval=${interval}&hidetoptoolbar=1&symboledit=1&saveimage=0&toolbarbg=f7f9fc&studies=`, [tradingViewSymbol, interval])
 
+  const analyzeImage = useCallback(async (file: File) => {
+    setIsAnalyzingImage(true)
+    setImageAnalysis(null)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("symbol", tradingViewSymbol)
+      formData.append("timeframe", interval)
+      formData.append("mode", "intraday")
+      const response = await fetch("/api/analyzeImage", { method: "POST", body: formData, cache: "no-store" })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Image analysis failed.")
+      setImageAnalysis(result.insights || "The chart was analyzed.")
+    } catch (analysisError) {
+      setError(analysisError instanceof Error ? analysisError.message : "Image analysis failed. Please try again.")
+    } finally {
+      setIsAnalyzingImage(false)
+    }
+  }, [interval, tradingViewSymbol])
+
   const processFile = useCallback(async (file: File) => {
     setError(null)
+    setImageAnalysis(null)
+    if (file.type.startsWith("image/")) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Image is too large. Please upload an image under 10 MB.")
+        return
+      }
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+      setImagePreview(URL.createObjectURL(file))
+      setFileName(file.name)
+      setRows([])
+      await analyzeImage(file)
+      return
+    }
     if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("For verified indicator calculations, upload an OHLCV CSV file.")
+      setError("Upload a PNG, JPG, WEBP chart image or an OHLCV CSV file.")
       return
     }
     const parsed = parseCsv(await file.text())
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImagePreview(null)
     setFileName(file.name)
     setRows(parsed.rows)
     setError(parsed.error ?? null)
-  }, [])
+  }, [analyzeImage, imagePreview])
 
   const onDrop = useCallback((event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault()
@@ -107,13 +145,15 @@ export function InternationalChartLab() {
           <CardHeader><CardTitle className="flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary" /> Intraday chart upload</CardTitle><CardDescription>Drop a real CSV export to calculate indicators from its timestamped OHLCV rows.</CardDescription></CardHeader>
           <CardContent className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
             <label onDragEnter={(event) => { event.preventDefault(); setDragActive(true) }} onDragOver={(event) => event.preventDefault()} onDragLeave={() => setDragActive(false)} onDrop={onDrop} className={`flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-border bg-muted/20 hover:border-primary/60"}`}>
-              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void processFile(file) }} />
-              <FileUp className="mb-3 h-9 w-9 text-primary" /><span className="font-semibold">Drag and drop your CSV here</span><span className="mt-1 text-sm text-muted-foreground">or click to browse · time, open, high, low, close, volume</span>{fileName && <Badge variant="secondary" className="mt-4">{fileName}</Badge>}
+              <input type="file" accept="image/png,image/jpeg,image/webp,.csv,text/csv" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void processFile(file); event.currentTarget.value = "" }} />
+              {imagePreview ? <img src={imagePreview} alt={`Uploaded chart ${fileName ?? "preview"}`} className="mb-4 max-h-40 max-w-full rounded-lg border border-border object-contain" /> : <FileImage className="mb-3 h-9 w-9 text-primary" />}
+              <span className="font-semibold">Drag and drop a chart image or CSV here</span><span className="mt-1 text-sm text-muted-foreground">or click to browse · PNG, JPG, WEBP, or OHLCV CSV</span>{fileName && <Badge variant="secondary" className="mt-4">{fileName}</Badge>}
             </label>
             <div className="space-y-4 rounded-xl border border-border bg-background p-5">
               <div className="flex items-start gap-3"><Clock3 className="mt-0.5 h-5 w-5 text-primary" /><div><p className="font-semibold">Freshness is explicit</p><p className="text-sm leading-6 text-muted-foreground">The upload preserves your timestamps. TradingView’s feed may be real-time or delayed according to your exchange entitlement.</p></div></div>
-              {error ? <div className="flex gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{error}</span></div> : rows.length ? <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm"><p className="font-semibold text-foreground">Verified rows loaded: {rows.length}</p><p className="mt-1 text-muted-foreground">Indicator calculations can use this uploaded dataset only. No values were filled in automatically.</p></div> : <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">No uploaded data yet. Upload a CSV to enable dataset-based analysis.</div>}
-              <Button variant="outline" className="w-full" onClick={() => { setRows([]); setFileName(null); setError(null) }} disabled={!fileName}><UploadCloud className="mr-2 h-4 w-4" /> Clear uploaded data</Button>
+              {error ? <div className="flex gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{error}</span></div> : rows.length ? <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm"><p className="font-semibold text-foreground">Verified rows loaded: {rows.length}</p><p className="mt-1 text-muted-foreground">Indicator calculations can use this uploaded dataset only. No values were filled in automatically.</p></div> : imageAnalysis ? <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm"><p className="font-semibold text-foreground">Chart image analysis</p><p className="whitespace-pre-wrap text-muted-foreground">{imageAnalysis}</p><p className="border-t border-border pt-2 text-xs text-muted-foreground">Signals are estimates from visible chart patterns and indicators, not guaranteed predictions. Verify price, timeframe, and indicators against the live TradingView chart before trading.</p></div> : <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">Upload a chart image for visual indicator analysis or a CSV for exact calculations from its OHLCV rows.</div>}
+              {isAnalyzingImage && <p className="text-sm text-muted-foreground">Analyzing the uploaded chart image and visible indicators…</p>}
+              <Button variant="outline" className="w-full" onClick={() => { if (imagePreview) URL.revokeObjectURL(imagePreview); setRows([]); setFileName(null); setImageFile(null); setImagePreview(null); setImageAnalysis(null); setError(null) }} disabled={!fileName}><UploadCloud className="mr-2 h-4 w-4" /> Clear uploaded data</Button>
             </div>
           </CardContent>
         </Card>
