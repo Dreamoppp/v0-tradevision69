@@ -19,16 +19,18 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId)
-    if (element) {
-      const offset = 80
-      const elementPosition = element.getBoundingClientRect().top
-      const offsetPosition = elementPosition + window.pageYOffset - offset
+    const scroll = () => {
+      const element = document.getElementById(sectionId)
+      if (!element) return
+      const offsetPosition = element.getBoundingClientRect().top + window.scrollY - 80
+      window.scrollTo({ top: Math.max(0, offsetPosition), behavior: "smooth" })
+    }
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      })
+    if (currentView !== "home") {
+      onNavigate("home")
+      window.setTimeout(scroll, 100)
+    } else {
+      scroll()
     }
     setMobileMenuOpen(false)
   }
@@ -80,19 +82,19 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
               </button>
               <button
                 onClick={() => scrollToSection("features")}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
+                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
               >
                 Features
               </button>
               <button
                 onClick={() => scrollToSection("experts")}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
+                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
               >
                 Experts
               </button>
               <button
                 onClick={() => scrollToSection("premium")}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
+                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
               >
                 Pricing
               </button>
@@ -138,7 +140,7 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
                   onNavigate("platform")
                   setMobileMenuOpen(false)
                 }}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
               >
                 Platform
               </button>
@@ -147,7 +149,7 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
                   onNavigate("upload")
                   setMobileMenuOpen(false)
                 }}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
               >
                 Chart Upload
               </button>
@@ -164,19 +166,19 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
               </button>
               <button
                 onClick={() => scrollToSection("features")}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
               >
                 Features
               </button>
               <button
                 onClick={() => scrollToSection("experts")}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
               >
                 Experts
               </button>
               <button
                 onClick={() => scrollToSection("premium")}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
               >
                 Pricing
               </button>
@@ -187,7 +189,7 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
                       onLoginClick()
                       setMobileMenuOpen(false)
                     }}
-                    className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                    className="text-left px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-smooth"
                   >
                     Sign In
                   </button>
