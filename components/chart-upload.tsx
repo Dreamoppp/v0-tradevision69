@@ -459,8 +459,9 @@ export function ChartUpload() {
         const signalText = isBuy ? "text-emerald-400" : isSell ? "text-rose-400" : "text-amber-300"
         const SignalIcon = isBuy ? ArrowUpRight : isSell ? ArrowDownRight : Minus
         return (
-          <Card className="overflow-hidden border-border/70 bg-card shadow-lg shadow-primary/5">
-            <CardHeader className="border-b border-border/60 bg-gradient-to-r from-primary/10 via-card to-transparent pb-5">
+          <Card className="relative overflow-hidden border-border/70 bg-card shadow-xl shadow-primary/10">
+            <div className={`h-1 w-full ${isBuy ? "bg-emerald-500" : isSell ? "bg-rose-500" : "bg-amber-400"}`} />
+            <CardHeader className="border-b border-border/60 bg-gradient-to-br from-primary/12 via-card to-transparent pb-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary"><Sparkles className="size-4" /> AI chart readout</div>
@@ -471,11 +472,16 @@ export function ChartUpload() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5 p-5 sm:p-6">
-              <div className={`flex items-center justify-between gap-4 rounded-2xl border p-4 ${signalTone}`}>
-                <div className="flex items-center gap-3"><div className={`flex size-11 items-center justify-center rounded-full bg-background/70 ${signalText}`}><SignalIcon className="size-6" /></div><div><p className={`text-lg font-bold tracking-wide ${signalText}`}>{signalLabel}</p><p className="text-xs text-muted-foreground">Based on visible price action and indicators</p></div></div>
-                {primarySignal && <Badge className={isBuy ? "bg-emerald-600 text-white hover:bg-emerald-600" : "bg-rose-600 text-white hover:bg-rose-600"}>{primarySignal.type}</Badge>}
+              <div className={`flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-sm ${signalTone}`}>
+                <div className="flex items-center gap-3"><div className={`flex size-12 items-center justify-center rounded-full bg-background/80 shadow-inner ${signalText}`}><SignalIcon className="size-6" /></div><div><p className={`text-lg font-bold tracking-wide ${signalText}`}>{signalLabel}</p><p className="text-xs text-muted-foreground">Based on visible price action and indicators</p></div></div>
+                {primarySignal && <Badge className={`px-3 py-1 font-bold ${isBuy ? "bg-emerald-600 text-white hover:bg-emerald-600" : "bg-rose-600 text-white hover:bg-rose-600"}`}>{primarySignal.type}</Badge>}
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm leading-6 text-foreground/90 whitespace-pre-wrap">{analysisResult.insights}</div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Market bias</p><p className={`mt-1 font-semibold ${isBuy ? "text-emerald-500" : isSell ? "text-rose-500" : "text-amber-500"}`}>{analysisResult.trend || "Neutral"}</p></div>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Signal strength</p><p className="mt-1 font-semibold text-foreground">{primarySignal ? "Actionable setup" : "Wait for confirmation"}</p></div>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Risk note</p><p className="mt-1 font-semibold text-foreground">Use a defined stop</p></div>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm leading-6 text-foreground/90 whitespace-pre-wrap"><div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary"><Sparkles className="size-3.5" /> Analyst readout</div>{analysisResult.insights}</div>
               {analysisResult.signals && analysisResult.signals.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
                 {analysisResult.signals.map((signal, i) => {
                   const signalIsBuy = signal.type === "Buy"
