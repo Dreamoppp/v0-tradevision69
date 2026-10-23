@@ -15,6 +15,7 @@ import { ChatBot } from "@/components/chat-bot"
 import { LoginModal } from "@/components/auth/login-modal"
 import { X, MessageCircle } from "lucide-react"
 import { OurExpertsSection } from "@/components/our-experts"
+import { PaperTradingSection } from "@/components/paper-trading-section"
 
 export default function HomePage() {
   const [currentView, setCurrentView] = useState<"home" | "platform" | "upload">("home")
@@ -104,7 +105,12 @@ export default function HomePage() {
         </>
       )}
 
-      {currentView === "platform" && <TradingDashboard user={user} />}
+      {currentView === "platform" && (
+        <>
+          <TradingDashboard user={user} />
+          <PaperTradingSection />
+        </>
+      )}
       {currentView === "upload" && <ChartUpload />}
 
       <Footer onNavigate={handleNavigation} />
