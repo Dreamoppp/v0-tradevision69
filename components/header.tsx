@@ -12,9 +12,10 @@ interface HeaderProps {
   onLoginClick: () => void
   onLogout: () => void
   onPaperTrading?: () => void
+  paperTradingActive?: boolean
 }
 
-export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, onPaperTrading }: HeaderProps) {
+export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, onPaperTrading, paperTradingActive = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const scrollToSection = (sectionId: string) => {
@@ -71,7 +72,9 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
               </button>
               <button
                 onClick={() => onPaperTrading?.()}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
+                className={`transition-smooth px-4 py-2 text-sm font-medium rounded-lg ${
+                  paperTradingActive ? "text-emerald-600 bg-emerald-500/10" : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/5"
+                }`}
               >
                 Paper Trading
               </button>
@@ -153,7 +156,9 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, 
                   onPaperTrading?.()
                   setMobileMenuOpen(false)
                 }}
-                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+                className={`text-left px-4 py-2 text-sm font-medium rounded-lg transition-smooth ${
+                  paperTradingActive ? "text-accent bg-accent/10" : "text-foreground hover:bg-accent/10"
+                }`}
               >
                 Paper Trading
               </button>

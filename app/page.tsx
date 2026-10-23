@@ -19,6 +19,7 @@ import { PaperTradingSection } from "@/components/paper-trading-section"
 
 export default function HomePage() {
   const [currentView, setCurrentView] = useState<"home" | "platform" | "upload">("home")
+  const [paperTradingActive, setPaperTradingActive] = useState(false)
   const [showChatBot, setShowChatBot] = useState(false)
   const [user, setUser] = useState<{ email: string; name: string } | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -48,6 +49,7 @@ export default function HomePage() {
   }, [])
 
   const handleNavigation = (view: "home" | "platform" | "upload") => {
+    setPaperTradingActive(false)
     if (view === "platform" && !user) {
       setShowLoginModal(true)
       return
@@ -65,6 +67,7 @@ export default function HomePage() {
       setShowLoginModal(true)
       return
     }
+    setPaperTradingActive(true)
     setCurrentView("platform")
     window.setTimeout(() => {
       document.getElementById("paper-trading")?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -103,6 +106,7 @@ export default function HomePage() {
         onLoginClick={() => setShowLoginModal(true)}
         onLogout={handleLogout}
         onPaperTrading={handlePaperTrading}
+        paperTradingActive={paperTradingActive}
       />
 
       {currentView === "home" && (
