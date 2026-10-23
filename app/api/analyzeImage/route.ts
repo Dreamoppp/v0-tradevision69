@@ -28,15 +28,44 @@ const INDIAN_STOCKS = [
   { symbol: "ITC", name: "ITC Ltd" },
 ]
 
-async function analyzeIndianStock(symbol: string, mode: string, timeframe: string, risk: string) {
-  const stock = INDIAN_STOCKS.find((s) => s.symbol === symbol)
-  if (!stock) {
-    throw new Error(`Live market data is not configured for ${symbol}. No prediction was generated.`)
-  }
+function normalizeYahooSymbol(symbol: string) {
+  const value = symbol.trim().toUpperCase()
+  if (value.includes(":")) return value.split(":").at(-1) || value
+  return value
+}
 
-  // Never manufacture a price or indicator. A live broker/data-provider adapter must supply OHLCV here.
-  throw new Error(`Live market data is unavailable for ${stock.name}. No prediction was generated.`)
+async function analyzeMarketData(symbol: string, mode: string, timeframe: string, risk: string) {
+  const yahooSymbol = normalizeYahooSymbol(symbol)
+  const range = mode === "intraday" ? "5d" : "1mo"
+  const interval = timeframe === "15" ? "15m" : timeframe === "60" ? "60m" : "1d"
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=${range}&interval=${interval}&includePrePost=false&events=div%2Csplits`
+  const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } })
+  if (!response.ok) throw new Error(`Delayed market data is unavailable for ${symbol}.`)
+  const payload = await response.json()
+  const result = payload.chart?.result?.[0]
+  const quote = result?.indicators?.quote?.[0]
+  const closes = (quote?.close ?? []).filter((value: unknown): value is number => typeof value === "number" && Number.isFinite(value))
+  const highs = (quote?.high ?? []).filter((value: unknown): value is number => typeof value === "number" && Number.isFinite(value))
+  const lows = (quote?.low ?? []).filter((value: unknown): value is number => typeof value === "number" && Number.isFinite(value))
+  if (closes.length < 3) throw new Error(`Not enough delayed candles are available for ${symbol}.`)
 
+  const currentPrice = closes.at(-1) as number
+  const previousPrice = closes.at(-2) as number
+  const change = ((currentPrice - previousPrice) / previousPrice) * 100
+  const shortWindow = closes.slice(-Math.min(5, closes.length))
+  const movingAverage = shortWindow.reduce((sum, value) => sum + value, 0) / shortWindow.length
+  const trend: AnalysisCore["trend"] = currentPrice > movingAverage && change > 0.1 ? "Bullish" : currentPrice < movingAverage && change < -0.1 ? "Bearish" : "Sideways"
+  const support = Math.min(...lows.slice(-Math.min(10, lows.length)))
+  const resistance = Math.max(...highs.slice(-Math.min(10, highs.length)))
+  const currency = result.meta?.currency || "USD"
+  const action = trend === "Bullish" ? "BUY" : trend === "Bearish" ? "SELL" : "WAIT"
+  const entry = trend === "Bullish" ? currentPrice : trend === "Bearish" ? currentPrice : movingAverage
+  const stop = trend === "Bullish" ? support : resistance
+  const target = trend === "Bullish" ? resistance : support
+  const lastTimestamp = result.timestamp?.at(-1)
+  const asOf = lastTimestamp ? new Date(lastTimestamp * 1000).toISOString() : "unknown"
+  const recommendation = `${symbol} Delayed Market Analysis\nCurrent price: ${currency} ${currentPrice.toFixed(2)}\nChange: ${change.toFixed(2)}%\nTrend: ${trend}\nSupport: ${currency} ${support.toFixed(2)}\nResistance: ${currency} ${resistance.toFixed(2)}\n\nTimeframe: ${timeframe} · Mode: ${mode} · Risk: ${risk}\nSignal: ${action}\nEntry reference: ${currency} ${entry.toFixed(2)}\nStop reference: ${currency} ${stop.toFixed(2)}\nTarget reference: ${currency} ${target.toFixed(2)}\n\nSource: Yahoo Finance delayed chart data (${asOf}). Indicators: price change, 5-period moving average, recent support/resistance.`
+  return { trend, currentPrice, keyLevels: { support, resistance }, technicalIndicators: ["Price change", "5-period moving average", "Recent support/resistance"], tradingRecommendation: recommendation, stockName: symbol, symbol }
 }
 
 function generateTradingSignals(analysis: AnalysisCore, mode: string, risk: string) {
@@ -68,10 +97,10 @@ export async function POST(request: NextRequest) {
     let insights: string = ""
 
     if (symbol) {
-      console.log("[v0] === Starting Indian stock analysis ===")
-      analysis = await analyzeIndianStock(symbol, mode, timeframe, risk)
+      console.log("[v0] === Starting delayed market analysis ===", { symbol, mode, timeframe })
+      analysis = await analyzeMarketData(symbol, mode, timeframe, risk)
       insights = analysis.tradingRecommendation
-      console.log("[v0] === Analysis complete ===")
+      console.log("[v0] === Delayed analysis complete ===")
     } else {
       return NextResponse.json({ error: "No symbol provided" }, { status: 400 })
     }
