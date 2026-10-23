@@ -452,20 +452,35 @@ export function ChartUpload() {
       {analysisResult && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Results</CardTitle>
-            {analysisResult.trend && <Badge>{analysisResult.trend}</Badge>}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" /> Analysis Results</CardTitle>
+                <CardDescription>Indicator-based setup for {analysisResult.symbol || "the uploaded chart"}</CardDescription>
+              </div>
+              {analysisResult.trend && <Badge variant={analysisResult.trend === "Bullish" ? "default" : analysisResult.trend === "Bearish" ? "destructive" : "secondary"} className="w-fit">{analysisResult.trend}</Badge>}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm whitespace-pre-wrap text-foreground">{analysisResult.insights}</div>
             {analysisResult.signals && analysisResult.signals.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold">Trading Signals:</h3>
-                {analysisResult.signals.map((signal, i) => (
-                  <div key={i} className="p-3 bg-muted rounded">
-                    <div className="font-medium">{signal.type}</div>
-                    <div className="text-sm text-muted-foreground">Entry: ₹{signal.price} | Target: ₹{signal.TP} | SL: ₹{signal.SL}</div>
-                  </div>
-                ))}
+                {analysisResult.signals.map((signal, i) => {
+                  const isBuy = signal.type === "Buy"
+                  return (
+                    <div key={i} className={`rounded-xl border p-4 ${isBuy ? "border-emerald-500/30 bg-emerald-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <Badge variant={isBuy ? "default" : "destructive"} className={isBuy ? "bg-emerald-600 hover:bg-emerald-600" : ""}>{isBuy ? "BUY" : "SELL"}</Badge>
+                        <span className="text-xs text-muted-foreground">{signal.reason}</span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                        <div><p className="text-xs text-muted-foreground">Entry</p><p className="font-semibold">₹{signal.price}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Target</p><p className={`font-semibold ${isBuy ? "text-emerald-700" : "text-red-700"}`}>₹{signal.TP}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Stop loss</p><p className="font-semibold text-red-700">₹{signal.SL}</p></div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </CardContent>

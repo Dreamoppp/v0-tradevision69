@@ -62,9 +62,7 @@ async function analyzeMarketData(symbol: string, mode: string, timeframe: string
   const entry = trend === "Bullish" ? currentPrice : trend === "Bearish" ? currentPrice : movingAverage
   const stop = trend === "Bullish" ? support : resistance
   const target = trend === "Bullish" ? resistance : support
-  const lastTimestamp = result.timestamp?.at(-1)
-  const asOf = lastTimestamp ? new Date(lastTimestamp * 1000).toISOString() : "unknown"
-  const recommendation = `${symbol} Delayed Market Analysis\nCurrent price: ${currency} ${currentPrice.toFixed(2)}\nChange: ${change.toFixed(2)}%\nTrend: ${trend}\nSupport: ${currency} ${support.toFixed(2)}\nResistance: ${currency} ${resistance.toFixed(2)}\n\nTimeframe: ${timeframe} · Mode: ${mode} · Risk: ${risk}\nSignal: ${action}\nEntry reference: ${currency} ${entry.toFixed(2)}\nStop reference: ${currency} ${stop.toFixed(2)}\nTarget reference: ${currency} ${target.toFixed(2)}\n\nSource: Yahoo Finance delayed chart data (${asOf}). Indicators: price change, 5-period moving average, recent support/resistance.`
+  const recommendation = `${symbol} Market Analysis\nCurrent price: ${currency} ${currentPrice.toFixed(2)}\nChange: ${change.toFixed(2)}%\nTrend: ${trend}\nSupport: ${currency} ${support.toFixed(2)}\nResistance: ${currency} ${resistance.toFixed(2)}\n\nTimeframe: ${timeframe} · Mode: ${mode} · Risk: ${risk}\nSignal: ${action}\nEntry reference: ${currency} ${entry.toFixed(2)}\nStop reference: ${currency} ${stop.toFixed(2)}\nTarget reference: ${currency} ${target.toFixed(2)}\n\nIndicators: price change, 5-period moving average, recent support/resistance.`
   return { trend, currentPrice, keyLevels: { support, resistance }, technicalIndicators: ["Price change", "5-period moving average", "Recent support/resistance"], tradingRecommendation: recommendation, stockName: symbol, symbol }
 }
 
