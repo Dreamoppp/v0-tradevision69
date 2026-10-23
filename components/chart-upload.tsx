@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileImage, TrendingUp, BarChart3, Activity, Target, AlertTriangle, LineChart, Shield, Search, X } from "lucide-react"
+import { Upload, FileImage, TrendingUp, BarChart3, Activity, Target, AlertTriangle, LineChart, Shield, Search, X, ArrowUpRight, ArrowDownRight, Minus, Sparkles } from "lucide-react"
 import { UploadedCsvChart, type OhlcRow } from "@/components/uploaded-csv-chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
@@ -449,43 +449,47 @@ export function ChartUpload() {
         </CardContent>
       </Card>
 
-      {analysisResult && (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" /> Analysis Results</CardTitle>
-                <CardDescription>Indicator-based setup for {analysisResult.symbol || "the uploaded chart"}</CardDescription>
+      {analysisResult && (() => {
+        const primarySignal = analysisResult.signals?.[0]
+        const signalType = primarySignal?.type ?? (analysisResult.trend === "Bullish" ? "Buy" : analysisResult.trend === "Bearish" ? "Sell" : "Wait")
+        const isBuy = signalType === "Buy"
+        const isSell = signalType === "Sell"
+        const signalLabel = isBuy ? "BUY SETUP" : isSell ? "SELL SETUP" : "WAIT / NO TRADE"
+        const signalTone = isBuy ? "border-emerald-500/30 bg-emerald-500/10" : isSell ? "border-rose-500/30 bg-rose-500/10" : "border-amber-500/30 bg-amber-500/10"
+        const signalText = isBuy ? "text-emerald-400" : isSell ? "text-rose-400" : "text-amber-300"
+        const SignalIcon = isBuy ? ArrowUpRight : isSell ? ArrowDownRight : Minus
+        return (
+          <Card className="overflow-hidden border-border/70 bg-card shadow-lg shadow-primary/5">
+            <CardHeader className="border-b border-border/60 bg-gradient-to-r from-primary/10 via-card to-transparent pb-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary"><Sparkles className="size-4" /> AI chart readout</div>
+                  <CardTitle className="flex items-center gap-2 text-xl"><BarChart3 className="size-5 text-primary" /> Analysis Results</CardTitle>
+                  <CardDescription className="mt-1">Indicator-based setup for {analysisResult.symbol || "the uploaded chart"}</CardDescription>
+                </div>
+                {analysisResult.trend && <Badge variant="outline" className={`w-fit ${isBuy ? "border-emerald-500/40 text-emerald-400" : isSell ? "border-rose-500/40 text-rose-400" : "border-amber-500/40 text-amber-300"}`}>{analysisResult.trend} trend</Badge>}
               </div>
-              {analysisResult.trend && <Badge variant={analysisResult.trend === "Bullish" ? "default" : analysisResult.trend === "Bearish" ? "destructive" : "secondary"} className="w-fit">{analysisResult.trend}</Badge>}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm whitespace-pre-wrap text-foreground">{analysisResult.insights}</div>
-            {analysisResult.signals && analysisResult.signals.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-semibold">Trading Signals:</h3>
+            </CardHeader>
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div className={`flex items-center justify-between gap-4 rounded-2xl border p-4 ${signalTone}`}>
+                <div className="flex items-center gap-3"><div className={`flex size-11 items-center justify-center rounded-full bg-background/70 ${signalText}`}><SignalIcon className="size-6" /></div><div><p className={`text-lg font-bold tracking-wide ${signalText}`}>{signalLabel}</p><p className="text-xs text-muted-foreground">Based on visible price action and indicators</p></div></div>
+                {primarySignal && <Badge className={isBuy ? "bg-emerald-600 text-white hover:bg-emerald-600" : "bg-rose-600 text-white hover:bg-rose-600"}>{primarySignal.type}</Badge>}
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm leading-6 text-foreground/90 whitespace-pre-wrap">{analysisResult.insights}</div>
+              {analysisResult.signals && analysisResult.signals.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
                 {analysisResult.signals.map((signal, i) => {
-                  const isBuy = signal.type === "Buy"
-                  return (
-                    <div key={i} className={`rounded-xl border p-4 ${isBuy ? "border-emerald-500/30 bg-emerald-500/10" : "border-red-500/30 bg-red-500/10"}`}>
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <Badge variant={isBuy ? "default" : "destructive"} className={isBuy ? "bg-emerald-600 hover:bg-emerald-600" : ""}>{isBuy ? "BUY" : "SELL"}</Badge>
-                        <span className="text-xs text-muted-foreground">{signal.reason}</span>
-                      </div>
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-                        <div><p className="text-xs text-muted-foreground">Entry</p><p className="font-semibold">₹{signal.price}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Target</p><p className={`font-semibold ${isBuy ? "text-emerald-700" : "text-red-700"}`}>₹{signal.TP}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Stop loss</p><p className="font-semibold text-red-700">₹{signal.SL}</p></div>
-                      </div>
-                    </div>
-                  )
+                  const signalIsBuy = signal.type === "Buy"
+                  return <div key={i} className={`rounded-2xl border p-4 ${signalIsBuy ? "border-emerald-500/30 bg-emerald-500/10" : "border-rose-500/30 bg-rose-500/10"}`}>
+                    <div className="flex items-center justify-between gap-3"><Badge className={signalIsBuy ? "bg-emerald-600 text-white hover:bg-emerald-600" : "bg-rose-600 text-white hover:bg-rose-600"}>{signalIsBuy ? "BUY" : "SELL"}</Badge><span className="text-xs text-muted-foreground">{signal.reason}</span></div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-sm"><div className="rounded-lg bg-background/60 p-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">Entry</p><p className="mt-1 font-semibold">₹{signal.price}</p></div><div className="rounded-lg bg-background/60 p-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">Target</p><p className={`mt-1 font-semibold ${signalIsBuy ? "text-emerald-400" : "text-rose-400"}`}>₹{signal.TP}</p></div><div className="rounded-lg bg-background/60 p-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">Stop loss</p><p className="mt-1 font-semibold text-rose-400">₹{signal.SL}</p></div></div>
+                  </div>
                 })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              </div>}
+              <div className="flex items-start gap-2 border-t border-border/60 pt-4 text-xs leading-5 text-muted-foreground"><Shield className="mt-0.5 size-4 shrink-0 text-primary" /><span>Signals are estimates from the uploaded chart and visible indicators, not guaranteed predictions. Verify price and timeframe before trading.</span></div>
+            </CardContent>
+          </Card>
+        )
+      })()}
 
       {isAnalyzing && (
         <Card>
