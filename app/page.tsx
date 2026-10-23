@@ -60,6 +60,17 @@ export default function HomePage() {
     setShowChatBot(!showChatBot)
   }
 
+  const handlePaperTrading = () => {
+    if (!user) {
+      setShowLoginModal(true)
+      return
+    }
+    setCurrentView("platform")
+    window.setTimeout(() => {
+      document.getElementById("paper-trading")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 50)
+  }
+
   const handleLogin = (userData: { email: string; name: string }) => {
     setUser(userData)
     setShowLoginModal(false)
@@ -91,6 +102,7 @@ export default function HomePage() {
         user={user}
         onLoginClick={() => setShowLoginModal(true)}
         onLogout={handleLogout}
+        onPaperTrading={handlePaperTrading}
       />
 
       {currentView === "home" && (

@@ -44,7 +44,7 @@ export function PaperTradingSection() {
   }
 
   return (
-    <section className="border-t border-border bg-muted/20 px-4 py-12 sm:px-6 lg:px-8" aria-labelledby="paper-trading-title">
+    <section id="paper-trading" className="scroll-mt-24 border-t border-border bg-muted/20 px-4 py-12 sm:px-6 lg:px-8" aria-labelledby="paper-trading-title">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>

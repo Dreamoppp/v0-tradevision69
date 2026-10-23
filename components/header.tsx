@@ -11,6 +11,7 @@ interface HeaderProps {
   user?: { email: string; name: string } | null
   onLoginClick: () => void
   onLogout: () => void
+  onPaperTrading?: () => void
 }
 
 export function Header({ onNavigate, currentView, user, onLoginClick, onLogout }: HeaderProps) {
@@ -67,6 +68,12 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout }
                 }`}
               >
                 Chart Upload
+              </button>
+              <button
+                onClick={() => onPaperTrading?.()}
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth px-4 py-2 text-sm font-medium rounded-lg"
+              >
+                Paper Trading
               </button>
               <button
                 onClick={() => scrollToSection("features")}
@@ -140,6 +147,12 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout }
                 className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
               >
                 Chart Upload
+              </button>
+              <button
+                onClick={() => onPaperTrading?.()}
+                className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
+              >
+                Paper Trading
               </button>
               <button
                 onClick={() => scrollToSection("features")}
