@@ -14,7 +14,7 @@ interface HeaderProps {
   onPaperTrading?: () => void
 }
 
-export function Header({ onNavigate, currentView, user, onLoginClick, onLogout }: HeaderProps) {
+export function Header({ onNavigate, currentView, user, onLoginClick, onLogout, onPaperTrading }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const scrollToSection = (sectionId: string) => {
@@ -149,7 +149,10 @@ export function Header({ onNavigate, currentView, user, onLoginClick, onLogout }
                 Chart Upload
               </button>
               <button
-                onClick={() => onPaperTrading?.()}
+                onClick={() => {
+                  onPaperTrading?.()
+                  setMobileMenuOpen(false)
+                }}
                 className="text-left px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/10 rounded-lg transition-smooth"
               >
                 Paper Trading
